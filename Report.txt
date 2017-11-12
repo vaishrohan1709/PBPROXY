@@ -1,0 +1,34 @@
+Testing Environment: 
+	Ubuntu 16.04.3 LTS
+	Linux 4.10.0-35-generic x86_64
+
+Compiler version:
+	gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.4)
+
+Commands Example:
+
+Format-
+	pbproxy [-l port] -k keyfile destination port
+
+	Proxy Server side-
+		>	make
+		> 	./pbproxy -l 2222 -k mykey localhost 22 
+
+	Client side-
+		>	make
+		>	ssh -o "ProxyCommand ./pbproxy -k mykey localhost 2122" localhost
+
+	It connects via SSH through pbproxy(encrypted channel) without errors
+
+
+Design:
+	1. Proxy Server starts to listen on "-l port" until it receives a connection from client. Then it connects to the actual server listening only locally on port "detination port". 
+	2. Client connects to server using destination and port. Once connected it takes input from user on stdin, encrypts it AES in CTR mode attaching a random IV with every message.
+	3. Proxy Server reads from client, detaches the IV to reinitialize state and decrypts the client message to forward it to the actual server as plain text. It waits for the server response, encrypts it and sends it back to the client.
+	4. Client decrypts the proxy server message and prints the plaintext on stdout.
+	5. It goes on until the client exits but the server keeps on listening for subsequent connections.
+
+Citations:
+	1.	Encryption: https://stackoverflow.com/questions/27495370/aes-ctr-symmetric-encryption-and-decryption
+	2.	Client Server Socket Programming: http://www.binarytides.com/server-client-example-c-sockets-linux/
+
